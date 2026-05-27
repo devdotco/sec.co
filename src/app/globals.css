@@ -1,26 +1,404 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─────────────────────────────────────────────────────────────────────────
+   sec.co — Brand-forward electric dark
+   Surfaces: near-black + bone. Signature: cyan → violet → magenta gradient
+   from the SEC.co shield. Ember reserved for emergency / breach response.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Surfaces */
+  --color-ink-0: #08090C;          /* page bg */
+  --color-ink-1: #0F1015;          /* elevated surface (cards, menus) */
+  --color-ink-2: #161720;          /* hover bg */
+  --color-ink-3: #1E1F2A;          /* pressed / active bg */
+
+  /* Borders */
+  --color-line-subtle: rgba(232, 232, 227, 0.06);
+  --color-line: rgba(232, 232, 227, 0.10);
+  --color-line-strong: rgba(232, 232, 227, 0.18);
+
+  /* Type */
+  --color-bone: #E8E8E3;           /* primary text */
+  --color-bone-dim: #B5B5B0;       /* secondary text */
+  --color-mute: #7A7B80;           /* tertiary text */
+  --color-faint: #4A4B52;          /* disabled */
+
+  /* Brand gradient stops (from the SEC.co shield) */
+  --color-brand-cyan: #19BFFF;
+  --color-brand-violet: #6029FF;
+  --color-brand-magenta: #FF3DBD;
+
+  /* Tinted overlays for ambient glow / panel washes */
+  --color-brand-cyan-soft: rgba(25, 191, 255, 0.14);
+  --color-brand-violet-soft: rgba(96, 41, 255, 0.14);
+  --color-brand-magenta-soft: rgba(255, 61, 189, 0.14);
+
+  /* Emergency / urgency — reserved exclusively for breach response */
+  --color-ember: #FF6B35;
+  --color-ember-bright: #FF8559;
+
+  /* Status */
+  --color-signal-green: #5BE49B;
+  --color-signal-amber: #F5C544;
+  --color-signal-red: #FF5160;
+
+  /* Type stacks */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  /* Radii */
+  --radius-pill: 999px;
+
+  /* Container */
+  --container-content: 1240px;
+  --container-wide: 1360px;
+
+  /* Animation */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ─── Base ─── */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
+  scroll-padding-top: 96px;     /* sticky header offset for anchor links */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ink-0);
+  color: var(--color-bone);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-teal);
+  color: var(--color-ink-0);
+}
+
+/* Focus ring — visible on keyboard, hidden on click */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Subtle texture: noise + grid for ambient depth ─── */
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--color-line-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line-subtle) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: -1px -1px;
+}
+
+.bg-radial-spot {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 229, 199, 0.10), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(0, 229, 199, 0.04), transparent 70%);
+}
+
+/* Faint grain overlay (CSS noise via SVG data URI) */
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ─── Display type helpers ─── */
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 30, "WONK" 0;
+  letter-spacing: -0.025em;
+}
+
+.font-display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+}
+
+/* ─── Mega menu animation ─── */
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.menu-panel {
+  animation: menu-in 180ms var(--ease-out-quint);
+  transform-origin: top center;
+}
+
+/* Smooth, premium link underlines */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 300ms var(--ease-out-quint);
+}
+.link-underline:hover {
+  background-size: 100% 1px;
+}
+
+/* ─── Brand gradient utilities ─── */
+
+.brand-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--color-brand-cyan) 0%,
+    var(--color-brand-violet) 55%,
+    var(--color-brand-magenta) 100%
+  );
+}
+
+.brand-gradient-text {
+  background: linear-gradient(
+    105deg,
+    var(--color-brand-cyan) 0%,
+    var(--color-brand-violet) 50%,
+    var(--color-brand-magenta) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.brand-gradient-border {
+  position: relative;
+  isolation: isolate;
+}
+.brand-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    var(--color-brand-cyan),
+    var(--color-brand-violet),
+    var(--color-brand-magenta)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Ambient glow blobs for hero / featured panels */
+.bg-aurora {
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(25, 191, 255, 0.18), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 10%, rgba(255, 61, 189, 0.14), transparent 65%),
+    radial-gradient(ellipse 70% 60% at 50% 110%, rgba(96, 41, 255, 0.20), transparent 60%);
+}
+
+/* Header scroll state */
+.header-scrolled {
+  background: rgba(8, 9, 12, 0.72);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* ─── Threat-flow diagram animations ─── */
+
+@keyframes streak-in {
+  0%   { opacity: 0; transform: translateX(-30%) scaleX(0.6); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(120%) scaleX(1.2); }
+}
+
+@keyframes streak-out {
+  0%   { opacity: 0; transform: translateX(-30%) scaleX(0.6); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(120%) scaleX(1.2); }
+}
+
+@keyframes ring-pulse {
+  0%   { transform: scale(0.85); opacity: 0; }
+  30%  { opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+@keyframes node-pulse {
+  0%, 92%, 100% {
+    box-shadow: 0 0 0 0 rgba(96, 41, 255, 0);
+    border-color: var(--color-line);
+  }
+  94% {
+    box-shadow: 0 0 0 4px rgba(96, 41, 255, 0.18);
+    border-color: rgba(96, 41, 255, 0.55);
+  }
+}
+
+/* ─── Blog prose typography ─── */
+
+.prose-sec {
+  color: var(--color-bone-dim);
+  font-size: 17px;
+  line-height: 1.7;
+  font-feature-settings: "ss01", "cv11";
+  max-width: 720px;
+}
+
+.prose-sec > * + * {
+  margin-top: 1.4em;
+}
+
+.prose-sec h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.85em;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--color-bone);
+  margin-top: 2.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose-sec h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.35em;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--color-bone);
+  margin-top: 1.8em;
+  margin-bottom: 0.3em;
+}
+
+.prose-sec h4 {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: var(--color-bone);
+  margin-top: 1.6em;
+  letter-spacing: -0.01em;
+}
+
+.prose-sec p {
+  color: var(--color-bone-dim);
+}
+
+.prose-sec strong, .prose-sec b {
+  color: var(--color-bone);
+  font-weight: 600;
+}
+
+.prose-sec em, .prose-sec i {
+  color: var(--color-bone);
+}
+
+.prose-sec a {
+  color: var(--color-brand-cyan);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 200ms;
+}
+
+.prose-sec a:hover {
+  color: var(--color-brand-magenta);
+}
+
+.prose-sec ul, .prose-sec ol {
+  padding-left: 1.6em;
+}
+.prose-sec ul { list-style: disc; }
+.prose-sec ol { list-style: decimal; }
+.prose-sec li::marker {
+  color: var(--color-brand-violet);
+}
+.prose-sec li + li {
+  margin-top: 0.5em;
+}
+
+.prose-sec blockquote {
+  border-left: 2px solid var(--color-brand-violet);
+  padding-left: 1.2em;
+  margin-left: 0;
+  font-style: italic;
+  color: var(--color-bone);
+}
+
+.prose-sec code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--color-ink-2);
+  color: var(--color-bone);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--color-line);
+}
+
+.prose-sec pre {
+  background: var(--color-ink-1);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 1.2em 1.4em;
+  overflow-x: auto;
+  font-size: 0.92em;
+  line-height: 1.6;
+}
+
+.prose-sec pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--color-bone);
+}
+
+.prose-sec hr {
+  border: none;
+  border-top: 1px solid var(--color-line);
+  margin: 3em 0;
+}
+
+.prose-sec table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+.prose-sec th, .prose-sec td {
+  border: 1px solid var(--color-line);
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+.prose-sec th {
+  background: var(--color-ink-1);
+  color: var(--color-bone);
+  font-weight: 600;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
