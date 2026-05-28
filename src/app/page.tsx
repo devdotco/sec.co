@@ -47,7 +47,7 @@ function Hero() {
         <h1
           className="font-display max-w-[1100px] text-[clamp(2.75rem,6.5vw,5.75rem)] font-medium leading-[1.02] tracking-[-0.035em] text-bone"
         >
-          Eyes on your stack, <span className="brand-gradient-text">24/7</span>.
+<span className="brand-gradient-text">Cybersecurity</span> with eyes on your stack, 24/7.
           <br />
           Detect, contain, and <span className="brand-gradient-text">eradicate</span>
           <br className="hidden sm:block" /> before it becomes a breach.
