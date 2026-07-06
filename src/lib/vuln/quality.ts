@@ -14,6 +14,7 @@ import type { CveRecord, Enrichment, IndexState, PageMeta } from "./types";
 const THRESHOLD = 0.62;
 const TARGET_WORDS = 900;
 const MIN_DESC_WORDS = 12; // below this a source is a stub, not an article
+const MIN_YEAR = 2000; // pre-2000 CVEs are low search value — don't index (KEV exempt)
 
 export function descWordCount(r: CveRecord): number {
   return r.description.split(/\s+/).filter(Boolean).length;
@@ -35,6 +36,10 @@ export function preScreen(r: CveRecord): { eligible: boolean; reason?: string } 
   if (rej) return { eligible: false, reason: rej };
   if (descWordCount(r) < MIN_DESC_WORDS && !r.kev) {
     return { eligible: false, reason: `source too thin (<${MIN_DESC_WORDS} words)` };
+  }
+  const year = Number(r.published?.slice(0, 4));
+  if (year && year < MIN_YEAR && !r.kev) {
+    return { eligible: false, reason: `pre-${MIN_YEAR} (low search value)` };
   }
   // Defer un-analyzed CVEs (no CVSS, not exploited) — re-enriched once NVD
   // assigns a score (content hash changes). Avoids paying to enrich noindex pages.
