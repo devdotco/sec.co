@@ -13,6 +13,13 @@
 # testing
 /coverage
 
+# vuln pipeline data store (Phase 1 file-backed; prod uses Postgres).
+# The committed CVE store SHIPS the pilot pages; local scratch (raw KEV) stays ignored.
+/.data/*
+!/.data/vuln
+/.data/vuln/*
+!/.data/vuln/cve
+
 # next.js
 /.next/
 /out/

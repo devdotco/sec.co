@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "vuln:ingest-kev": "tsx scripts/vuln/ingest-kev.ts",
+    "vuln:ingest-nvd": "tsx scripts/vuln/ingest-nvd.ts",
+    "vuln:enrich": "tsx scripts/vuln/enrich.ts",
+    "vuln:rescore": "tsx scripts/vuln/rescore.ts",
+    "vuln:orphans": "tsx scripts/vuln/orphan-audit.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -26,6 +31,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

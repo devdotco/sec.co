@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sec-enrichment.schema.json",
+  "title": "SEC.co CVE enrichment output (Haiku 4.5 structured output)",
+  "description": "AI-generated EXPLANATION layer only. Factual fields (CVSS, KEV, affected products, references, patch versions) are provided as ground truth and MUST NOT be invented. Validated live against claude-haiku-4-5 with output_config.format.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "plain_english_summary", "technical_summary", "business_impact",
+    "affected_systems_summary", "exploitability_summary", "remediation_summary",
+    "patch_guidance", "detection_guidance", "prioritization_reason",
+    "risk_score_explanation", "faq", "seo_title", "seo_description", "disclaimers"
+  ],
+  "properties": {
+    "plain_english_summary":    { "type": "string", "description": "Non-expert-readable overview of what the vuln is and why it matters." },
+    "technical_summary":        { "type": "string", "description": "Mechanism/root cause for a technical reader. No exploit code." },
+    "business_impact":          { "type": "string" },
+    "affected_systems_summary": { "type": "string", "description": "Narrative over the source-provided affected products; must not add products not in source." },
+    "exploitability_summary":   { "type": "string", "description": "Attack conditions in prose; no weaponized steps." },
+    "remediation_summary":      { "type": "string" },
+    "patch_guidance":           { "type": "string", "description": "Patch/mitigation guidance. Version numbers must trace to a source reference or be flagged 'verify vs vendor advisory'." },
+    "detection_guidance":       { "type": "string", "description": "How to detect exposure/exploitation (SCA, logs, IOCs) without exploit tooling." },
+    "prioritization_reason":    { "type": "string", "description": "Why to prioritize; may cite KEV/CVSS which are supplied as ground truth." },
+    "risk_score_explanation":   { "type": "string", "description": "Plain explanation of the supplied CVSS/EPSS — must not invent scores." },
+    "faq": {
+      "type": "array", "minItems": 3, "maxItems": 4,
+      "items": { "type": "object", "additionalProperties": false, "required": ["q", "a"],
+        "properties": { "q": { "type": "string" }, "a": { "type": "string" } } }
+    },
+    "seo_title":       { "type": "string", "description": "≤ ~60 chars incl. CVE ID + product + risk." },
+    "seo_description": { "type": "string", "description": "≤ ~160 chars meta description." },
+    "disclaimers":     { "type": "string", "description": "Informational-only; not professional security advice." }
+  }
+}

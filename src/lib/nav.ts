@@ -350,6 +350,16 @@ export const FOOTER_COLUMNS: NavColumn[] = [
       { label: "Guides", href: "/resources/guides/cybersecurity" },
       { label: "Tools", href: "/tools/cyber-risk-calculator" },
       { label: "Downloads", href: "/resources/downloads/cyber-risk-checklist" },
+      { label: "DEV", href: "https://dev.co?=secdotco" },
+    ],
+  },
+  {
+    title: "Vulnerability Intelligence",
+    links: [
+      { label: "Vulnerability database", href: "/vulnerabilities" },
+      { label: "Known exploited (KEV)", href: "/vulnerabilities/known-exploited" },
+      { label: "Critical vulnerabilities", href: "/vulnerabilities/severity/critical" },
+      { label: "High-severity", href: "/vulnerabilities/severity/high" },
     ],
   },
 ];
