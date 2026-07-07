@@ -1,0 +1,83 @@
+name: vuln-refresh
+
+# Automated vulnerability-intelligence wave:
+#   ingest NVD deltas + KEV → Haiku Batch enrichment → quality gate → orphan
+#   audit → commit the updated store → trigger a Coolify deploy.
+#
+# Inert until these repo secrets exist (Settings → Secrets and variables → Actions):
+#   ENRICHMENT_ANTHROPIC_API_KEY   (required — Haiku enrichment)
+#   COOLIFY_TOKEN                  (required — deploy trigger)
+#   COOLIFY_APP_UUID               (required — qu86l1luhygftdqoiuvzrl1o for sec.co)
+#   NVD_API_KEY                    (optional — raises NVD ingest rate limit ~10x)
+#
+# Cost is bounded by LIMIT (≈ $0.006/CVE batched). Default 400/day ≈ ~$2.40/day.
+# Pause anytime: disable this workflow in the Actions tab, or comment the cron.
+
+on:
+  schedule:
+    - cron: "17 8 * * *" # daily 08:17 UTC
+  workflow_dispatch:
+    inputs:
+      recent:
+        description: "How many recently-published CVEs to ingest"
+        default: "800"
+      limit:
+        description: "Max CVEs to enrich this run (cost cap)"
+        default: "400"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vuln-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ENRICHMENT_ANTHROPIC_API_KEY: ${{ secrets.ENRICHMENT_ANTHROPIC_API_KEY }}
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      RECENT: ${{ github.event.inputs.recent || '800' }}
+      LIMIT: ${{ github.event.inputs.limit || '400' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+
+      - name: Ingest KEV + recent CVEs
+        run: |
+          npm run vuln:ingest-kev
+          npm run vuln:ingest-nvd -- --recent "$RECENT"
+
+      - name: Enrich (Batch API) + score
+        run: |
+          npm run vuln:enrich -- --batch --limit "$LIMIT"
+          npm run vuln:rescore
+
+      - name: Orphan audit (gate)
+        run: npm run vuln:orphans
+
+      - name: Commit updated store
+        id: commit
+        run: |
+          git config user.name "sec-vuln-bot"
+          git config user.email "bot@sec.co"
+          git add .data/vuln/cve
+          if git diff --cached --quiet; then
+            echo "No store changes — nothing to deploy."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "vuln-refresh: automated wave ($(date -u +%F))"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Coolify deploy
+        if: steps.commit.outputs.changed == 'true'
+        run: |
+          curl -fsS -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+            "https://coolify.dev.co/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=false"
