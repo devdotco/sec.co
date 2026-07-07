@@ -25,7 +25,7 @@ export function cweSlug(c: string): string {
   return c.toLowerCase(); // 'CWE-79' -> 'cwe-79'
 }
 
-export type HubLink = { href: string; label: string; kind: "vendor" | "cwe" | "severity" | "year" };
+export type HubLink = { href: string; label: string; kind: "vendor" | "cwe" | "severity" | "year" | "yearsev" };
 
 /** The hubs a CVE links UP to. Guarantees ≥ severity+year for any scored CVE. */
 export function hubsFor(r: CveRecord): HubLink[] {
@@ -35,13 +35,14 @@ export function hubsFor(r: CveRecord): HubLink[] {
   }
   for (const c of r.cwes) hubs.push({ href: `/cwe/${cweSlug(c)}`, label: c, kind: "cwe" });
   const sev = r.cvss?.severity?.toLowerCase();
+  const y = r.published?.slice(0, 4);
   if (sev && (SEVERITIES as readonly string[]).includes(sev)) {
     hubs.push({ href: `/vulnerabilities/severity/${sev}`, label: r.cvss!.severity, kind: "severity" });
+    // Combined year×severity sub-facet — smaller than either parent, so it
+    // gives a shallower crawl path as the corpus spans multiple years.
+    if (y) hubs.push({ href: `/vulnerabilities/year/${y}/${sev}`, label: `${y} · ${r.cvss!.severity}`, kind: "yearsev" });
   }
-  if (r.published) {
-    const y = r.published.slice(0, 4);
-    hubs.push({ href: `/vulnerabilities/year/${y}`, label: y, kind: "year" });
-  }
+  if (y) hubs.push({ href: `/vulnerabilities/year/${y}`, label: y, kind: "year" });
   return hubs;
 }
 
@@ -70,6 +71,14 @@ export function bySeverity(): Map<string, StoredVuln[]> {
 }
 export function byYear(): Map<string, StoredVuln[]> {
   return group((v) => (v.record.published ? [v.record.published.slice(0, 4)] : []));
+}
+/** Hierarchical sub-facet: `${year}::${severity}` — keeps big year facets shallow. */
+export function byYearSeverity(): Map<string, StoredVuln[]> {
+  return group((v) => {
+    const y = v.record.published?.slice(0, 4);
+    const s = v.record.cvss?.severity?.toLowerCase();
+    return y && s && (SEVERITIES as readonly string[]).includes(s) ? [`${y}::${s}`] : [];
+  });
 }
 
 /** Original-cased vendor display name for a slug. */

@@ -10,7 +10,7 @@
  */
 import { loadEnv } from "./_env";
 import { allVulns } from "../../src/lib/vuln/store";
-import { bySeverity, byYear, byVendor, byCwe, PAGE_SIZE } from "../../src/lib/vuln/links";
+import { bySeverity, byYear, byYearSeverity, byVendor, byCwe, PAGE_SIZE } from "../../src/lib/vuln/links";
 import type { StoredVuln } from "../../src/lib/vuln/types";
 
 loadEnv();
@@ -32,7 +32,7 @@ function pagePositions(groups: Map<string, StoredVuln[]>): Map<string, number> {
   return pos;
 }
 
-const facetMaps = [bySeverity(), byYear(), byVendor(), byCwe()];
+const facetMaps = [bySeverity(), byYear(), byYearSeverity(), byVendor(), byCwe()];
 const facetCount = new Map<string, number>(); // how many facets list each page
 const shortestPage = new Map<string, number>(); // min archive-page number across facets
 for (const groups of facetMaps) {
@@ -54,8 +54,9 @@ console.log(`Orphans (0 facets)   : ${orphans.length}`);
 console.log(`Facets/page (inbound): min ${counts[0] ?? 0} · median ${median} · max ${counts[counts.length - 1] ?? 0}`);
 console.log(`Shortest crawl page# : max ${Math.max(0, ...depths)}  (>3 deep: ${deep})`);
 if (deep > 0) {
-  console.log(`  NOTE: ${deep} page(s) are only reachable >3 archive-pages deep — add hierarchical`);
-  console.log(`  faceting (e.g. year×severity) before those facets grow large. See the doc.`);
+  console.log(`  NOTE: ${deep} page(s) sit >3 archive-pages deep (reachable, and in the sitemap).`);
+  console.log(`  year×severity sub-facets exist; residual depth is single-year concentration and`);
+  console.log(`  resolves as the corpus spans more years. Crawler-fine at this depth.`);
 }
 if (orphans.length) {
   console.error(`\n✗ FAIL: ${orphans.length} orphan(s): ${orphans.slice(0, 8).map((v) => v.record.cveId).join(", ")}`);

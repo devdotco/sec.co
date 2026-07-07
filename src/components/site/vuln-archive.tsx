@@ -30,6 +30,7 @@ export function VulnArchive({
   page = 1,
   basePath,
   browse = [],
+  refine = [],
 }: {
   eyebrow: string;
   title: string;
@@ -38,6 +39,7 @@ export function VulnArchive({
   page?: number;
   basePath: string;
   browse?: Browse[];
+  refine?: Browse[];
 }) {
   const { slice, page: p, total, count } = paginate(items, page);
   const href = (n: number) => (n === 1 ? basePath : `${basePath}/page/${n}`);
@@ -59,8 +61,21 @@ export function VulnArchive({
           {total > 1 && <> · page {p} of {total}</>}
         </p>
 
+        {refine.length > 0 && (
+          <div className="mt-5">
+            <span className="mr-2 text-[12px] uppercase tracking-wide text-mute">Refine by severity:</span>
+            <span className="inline-flex flex-wrap gap-2 align-middle">
+              {refine.map((b) => (
+                <Link key={b.href} href={b.href} className="rounded border border-[var(--color-line)] px-2.5 py-1 text-[12px] text-bone-dim hover:text-bone">
+                  {b.label}
+                </Link>
+              ))}
+            </span>
+          </div>
+        )}
+
         {browse.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {browse.map((b) => (
               <Link key={b.href} href={b.href} className="rounded border border-[var(--color-line)] px-2.5 py-1 text-[12px] text-bone-dim hover:text-bone">
                 {b.label}

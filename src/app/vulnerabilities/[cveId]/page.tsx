@@ -15,6 +15,28 @@ const SEV_COLOR: Record<string, string> = {
   LOW: "#8ecae6",
 };
 
+/**
+ * Human-searched H1: derive a descriptive headline (product + vuln type) from
+ * the AI seo_title instead of the bare CVE ID — people search "log4j rce", not
+ * "CVE-2021-44228". Works for all past enriched pages (seo_title is stored) and
+ * future ones. Falls back to the CVE ID when unenriched.
+ */
+function humanHeadline(seoTitle: string | undefined, cveId: string): string {
+  if (!seoTitle) return cveId;
+  let h = seoTitle.split(" | ")[0].split(" – SEC")[0];
+  h = h.replace(/\s*[-–—]\s*(SEC\.co|Vulnerability Analysis).*$/i, "");
+  h = h.replace(/\s+Explained\.?$/i, "").trim();
+  if (!h) return cveId;
+  return h.toUpperCase().includes(cveId.toUpperCase()) ? h : `${cveId}: ${h}`;
+}
+
+/** The searchable description without the leading CVE-ID prefix (for link anchors). */
+function searchableDesc(seoTitle: string | undefined, cveId: string): string {
+  const h = humanHeadline(seoTitle, cveId);
+  const stripped = h.replace(new RegExp(`^${cveId}\\s*[:\\-–—]?\\s*`, "i"), "").trim();
+  return stripped || h;
+}
+
 export function generateStaticParams(): Params[] {
   return listWithPages().map((v) => ({ cveId: v.record.cveId.toLowerCase() }));
 }
@@ -74,7 +96,7 @@ export default async function VulnPage({ params }: { params: Promise<Params> }) 
   const hubs = hubsFor(r);
   const vendorHubs = hubs.filter((h) => h.kind === "vendor");
   const cweHubs = hubs.filter((h) => h.kind === "cwe");
-  const browseHubs = hubs.filter((h) => h.kind === "severity" || h.kind === "year");
+  const browseHubs = hubs.filter((h) => h.kind === "severity" || h.kind === "year" || h.kind === "yearsev");
   const related = relatedTo(r, 8);
 
   const breadcrumbLd = {
@@ -138,8 +160,8 @@ export default async function VulnPage({ params }: { params: Promise<Params> }) 
               </span>
             )}
           </div>
-          <h1 className="mt-4 font-display text-[clamp(2rem,4vw,3rem)] leading-[1.06] tracking-[-0.03em] text-bone">
-            {r.cveId}
+          <h1 className="mt-4 font-display text-[clamp(1.9rem,3.6vw,2.7rem)] leading-[1.1] tracking-[-0.03em] text-bone">
+            {humanHeadline(e?.seo_title, r.cveId)}
           </h1>
           {e && <p className="mt-4 max-w-3xl text-[16px] leading-relaxed text-bone/80">{e.plain_english_summary}</p>}
         </header>
@@ -254,13 +276,15 @@ export default async function VulnPage({ params }: { params: Promise<Params> }) 
               <ul className="mt-2 divide-y divide-[var(--color-line)]">
                 {related.map((rv) => (
                   <li key={rv.record.cveId} className="py-2.5">
-                    <Link href={`/vulnerabilities/${rv.record.cveId.toLowerCase()}`} className="group flex items-baseline justify-between gap-3">
-                      <span className="font-mono text-[13px] text-bone group-hover:underline">{rv.record.cveId}</span>
-                      <span className="text-[11px] text-mute">{rv.record.cvss?.severity ?? "N/A"}</span>
+                    <Link href={`/vulnerabilities/${rv.record.cveId.toLowerCase()}`} className="group block">
+                      <span className="flex items-baseline justify-between gap-3">
+                        <span className="font-mono text-[12.5px] text-mute">{rv.record.cveId}</span>
+                        <span className="text-[11px] text-mute">{rv.record.cvss?.severity ?? "N/A"}</span>
+                      </span>
+                      <span className="mt-0.5 block text-[13.5px] leading-snug text-bone/85 line-clamp-2 group-hover:text-bone group-hover:underline">
+                        {rv.enrichment ? searchableDesc(rv.enrichment.data.seo_title, rv.record.cveId) : rv.record.cveId}
+                      </span>
                     </Link>
-                    {rv.enrichment && (
-                      <p className="mt-0.5 text-[12px] leading-snug text-bone/60 line-clamp-1">{rv.enrichment.data.seo_title}</p>
-                    )}
                   </li>
                 ))}
               </ul>

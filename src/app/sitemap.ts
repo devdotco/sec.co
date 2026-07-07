@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { listIndexed } from "@/lib/vuln/store";
 import { getAllSlugs } from "@/lib/blog";
-import { bySeverity, byYear, byVendor, byCwe, PAGE_SIZE } from "@/lib/vuln/links";
+import { bySeverity, byYear, byYearSeverity, byVendor, byCwe, PAGE_SIZE } from "@/lib/vuln/links";
 import type { StoredVuln } from "@/lib/vuln/types";
 
 const BASE = "https://sec.co";
@@ -66,6 +66,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   };
   for (const [k, m] of bySeverity()) addHub(`/vulnerabilities/severity/${k}`, m);
   for (const [k, m] of byYear()) addHub(`/vulnerabilities/year/${k}`, m);
+  for (const [k, m] of byYearSeverity()) {
+    const [year, level] = k.split("::");
+    addHub(`/vulnerabilities/year/${year}/${level}`, m);
+  }
   for (const [k, m] of byVendor()) addHub(`/vendors/${k}/vulnerabilities`, m);
   for (const [k, m] of byCwe()) addHub(`/cwe/${k}`, m);
 

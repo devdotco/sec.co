@@ -4,7 +4,7 @@
  * severity facet AND a year facet, so paginated facet membership is what
  * guarantees no orphans at any scale (see docs/sec-internal-linking.md).
  */
-import { bySeverity, byYear, byCwe, byVendor, vendorName, SEVERITIES, PAGE_SIZE } from "./links";
+import { bySeverity, byYear, byYearSeverity, byCwe, byVendor, vendorName, SEVERITIES, PAGE_SIZE } from "./links";
 import type { StoredVuln } from "./types";
 
 export type Facet = { eyebrow: string; title: string; sub: string; basePath: string; items: StoredVuln[] };
@@ -34,6 +34,26 @@ export function yearFacet(year: string): Facet | null {
     basePath: `/vulnerabilities/year/${year}`,
     items: [...m].sort(byScore),
   };
+}
+
+export function yearSeverityFacet(year: string, level: string): Facet | null {
+  if (!(SEVERITIES as readonly string[]).includes(level)) return null;
+  const m = byYearSeverity().get(`${year}::${level}`);
+  if (!m || !m.length) return null;
+  return {
+    eyebrow: `${year} · ${SEV_LABEL[level]}`,
+    title: `${SEV_LABEL[level]}-severity vulnerabilities disclosed in ${year}`,
+    sub: `${SEV_LABEL[level]}-rated CVEs published in ${year}, with SEC.co remediation and prioritization guidance.`,
+    basePath: `/vulnerabilities/year/${year}/${level}`,
+    items: [...m].sort(byScore),
+  };
+}
+
+/** Severity refine-links available within a given year (for the year hub). */
+export function yearSeverityLinks(year: string): { href: string; label: string }[] {
+  return SEVERITIES.map((level) => ({ level, n: (byYearSeverity().get(`${year}::${level}`) ?? []).length }))
+    .filter((x) => x.n > 0)
+    .map((x) => ({ href: `/vulnerabilities/year/${year}/${x.level}`, label: `${SEV_LABEL[x.level]} (${x.n})` }));
 }
 
 export function cweFacet(cweId: string): Facet | null {
