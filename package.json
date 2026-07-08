@@ -11,7 +11,8 @@
     "vuln:ingest-nvd": "tsx scripts/vuln/ingest-nvd.ts",
     "vuln:enrich": "tsx scripts/vuln/enrich.ts",
     "vuln:rescore": "tsx scripts/vuln/rescore.ts",
-    "vuln:orphans": "tsx scripts/vuln/orphan-audit.ts"
+    "vuln:orphans": "tsx scripts/vuln/orphan-audit.ts",
+    "vuln:digest": "tsx scripts/vuln/weekly-digest.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

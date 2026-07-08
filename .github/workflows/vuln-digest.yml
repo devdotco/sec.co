@@ -1,0 +1,47 @@
+name: vuln-digest
+
+# Weekly vulnerability-intelligence digest → email to the team.
+#
+# Reads the committed CVE store, summarizes the week (enriched, new pages, KEV,
+# top-severity additions), and emails it via Resend. Read-only — never commits.
+#
+# Inert until these repo secrets/vars exist:
+#   RESEND_API_KEY     (secret, required — reuses the contact-form key)
+#   DIGEST_TO_EMAIL    (var, optional — default nate@dev.co)
+#   DIGEST_FROM_EMAIL  (var, optional — must be on a verified Resend domain)
+
+on:
+  schedule:
+    - cron: "0 14 * * 1" # Mondays 14:00 UTC (~9–10am ET)
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "Preview to the run log without sending"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vuln-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      DIGEST_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL || 'nate@dev.co' }}
+      DIGEST_FROM_EMAIL: ${{ vars.DIGEST_FROM_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the "new pages this week" git diff works
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - name: Send weekly digest
+        run: npm run vuln:digest ${{ (github.event.inputs.dry == 'true') && '-- --dry' || '' }}
