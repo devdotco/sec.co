@@ -254,7 +254,7 @@ export const TOOL_PAGES: Record<string, ResourcePage> = {
     hero: {
       eyebrow: "Tool · Interactive",
       title: <>Quantify cyber risk <span className="brand-gradient-text">in dollars</span>.</>,
-      sub: "Most cyber-risk conversations stop at 'high/medium/low'. This tool converts your exposure into a dollar range — frequency × magnitude — calibrated to industry benchmarks.",
+      sub: "Most cyber-risk conversations stop at 'high/medium/low'. This tool converts your exposure into an annualized dollar range — frequency × magnitude — calibrated to industry benchmarks. No signup; nothing leaves your browser.",
     },
     whatsInside: [
       "Industry-calibrated frequency benchmarks",
@@ -263,8 +263,7 @@ export const TOOL_PAGES: Record<string, ResourcePage> = {
       "Boardroom-ready output",
       "Calibrated to FAIR methodology",
     ],
-    cta: { href: "/contact?topic=other&tool=cyber-risk-calculator", label: "Request early access" },
-    ctaNote: "Calculator in private beta. We'll send the link.",
+    cta: { href: "/services/cyber-risk-assessment", label: "Get the expert assessment" },
     related: [
       { href: "/services/cyber-risk-assessment", title: "Cyber Risk Assessment", body: "The expert version of this analysis." },
       { href: "/services/cyber-insurance-readiness", title: "Cyber Insurance Readiness", body: "Quantified risk informs insurance binding." },
